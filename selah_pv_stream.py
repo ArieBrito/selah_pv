@@ -87,9 +87,9 @@ def generar_ticket(id_venta, cliente_nombre, productos, subtotal, descuento, tot
     carpeta_tickets = "tickets"
     os.makedirs(carpeta_tickets, exist_ok=True)
     archivo_pdf = os.path.join(carpeta_tickets, f"ticket_{id_venta}.pdf")
-  c = canvas.Canvas(archivo_pdf, pagesize=letter)
-width, height = letter
-x_start, y = 50, height - 100
+    c = canvas.Canvas(archivo_pdf, pagesize=letter)
+    width, height = letter
+    x_start, y = 50, height - 100
 
 # --- Logo centrado ---
 logo_width = 100
@@ -325,5 +325,6 @@ if st.button("🧾 Registrar y Generar Ticket"):
         finally:
             cursor.close()
             conexion.close()
+
 
 
