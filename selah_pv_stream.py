@@ -55,7 +55,7 @@ def obtener_clientes():
     if not conexion:
         return []
     cursor = conexion.cursor()
-    cursor.execute("SELECT ID_CLIENTE, NOMBRE, APELLIDO FROM CLIENTES")
+    cursor.execute("SELECT ID_CLIENTE, NOMBRE_CLIENTE, APELLIDO_CLIENTE FROM CLIENTES")
     result = cursor.fetchall()
     cursor.close()
     conexion.close()
@@ -167,7 +167,7 @@ with col1:
                 conexion = conectar_db()
                 if conexion:
                     cursor = conexion.cursor()
-                    sql = """INSERT INTO CLIENTES (NOMBRE, APELLIDO, EDAD, CORREO, TELEFONO, DIRECCION, PREFERENTE, PROMOS)
+                    sql = """INSERT INTO CLIENTES (NOMBRE_CLIENTE, APELLIDO_CLIENTE, EDAD, CORREO, TELEFONO, DIRECCION, PREFERENTE, PROMOS)
                              VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"""
                     datos = (nombre, apellido, edad, correo, telefono, direccion, preferente, promos)
                     cursor.execute(sql, datos)
@@ -225,3 +225,4 @@ if st.button("🧾 Generar Ticket PDF"):
     st.success(f"Ticket generado: {pdf_path}")
     with open(pdf_path, "rb") as f:
         st.download_button("Descargar Ticket PDF", f, file_name=f"ticket_{id_venta}.pdf", mime="application/pdf")
+
