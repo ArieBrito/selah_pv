@@ -223,14 +223,82 @@ st.metric("💰 Total a pagar", f"${total_final:.2f}")
 st.metric("🔁 Cambio", f"${cambio:.2f}")
 
 # --- GENERAR VENTA ---
-if st.button("🧾 Generar Ticket PDF"):
-    id_venta = datetime.now().strftime("%Y%m%d%H%M%S")
-    cliente_nombre = cliente_otro if cliente_otro else cliente_sel
-    pdf_path = generar_ticket(id_venta, cliente_nombre, lista_venta, total, descuento, total_final, pago, cambio, tipo_pago)
-    st.success(f"Ticket generado: {pdf_path}")
-    with open(pdf_path, "rb") as f:
-        st.download_button("Descargar Ticket PDF", f, file_name=f"ticket_{id_venta}.pdf", mime="application/pdf")
+# --- REGISTRAR VENTA Y GENERAR TICKET ---
+if st.button("🧾 Registrar y Generar Ticket"):
+    conexion = conectar_db()
+    if not conexion:
+        st.error("❌ No se pudo conectar a la base de datos.")
+    else:
+        try:
+            cursor = conexion.cursor()
 
+            # --- Obtener ID del cliente ---
+            if cliente_otro:
+                id_cliente = None  # Cliente no registrado
+            else:
+                id_cliente = int(cliente_sel.split(" - ")[0])
 
+            # --- Insertar venta ---
+            sql_venta = """
+                INSERT INTO VENTAS (ID_CLIENTE, TIPO_VENTA, MONTO_TOTAL, DESCUENTO, PAGO_TIPO, PAGO_RECIBIDO)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            datos_venta = (id_cliente, tipo_venta, float(total_final), float(descuento), tipo_pago, float(pago))
+            cursor.execute(sql_venta, datos_venta)
+            conexion.commit()
 
+            # --- Obtener ID_VENTA generado ---
+            id_venta = cursor.lastrowid
 
+            # --- Insertar productos de la venta ---
+            sql_prod = """
+                INSERT INTO VENTA_PRODUCTOS
+                (ID_VENTA, ID_PRODUCTO, DESCRIPCION, CLASIFICACION, CANTIDAD, PRECIO_UNITARIO, PRECIO_TOTAL)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            for p in lista_venta:
+                clasificacion = next((x[2] for x in productos if x[0] == p["id_producto"]), "M")
+                datos_prod = (
+                    id_venta,
+                    p["id_producto"],
+                    p["desc"],
+                    clasificacion,
+                    int(p["cant"]),
+                    float(p["precio"]),
+                    float(p["subtotal"])
+                )
+                cursor.execute(sql_prod, datos_prod)
+
+            conexion.commit()
+
+            # --- Generar ticket PDF ---
+            cliente_nombre = cliente_otro if cliente_otro else cliente_sel
+            pdf_path = generar_ticket(
+                id_venta,
+                cliente_nombre,
+                lista_venta,
+                total,
+                descuento,
+                total_final,
+                pago,
+                cambio,
+                tipo_pago
+            )
+
+            st.success(f"✅ Venta registrada correctamente. Ticket generado: {pdf_path}")
+
+            with open(pdf_path, "rb") as f:
+                st.download_button(
+                    "Descargar Ticket PDF",
+                    f,
+                    file_name=f"ticket_{id_venta}.pdf",
+                    mime="application/pdf"
+                )
+
+        except Error as e:
+            conexion.rollback()
+            st.error(f"⚠️ Error al registrar la venta: {e}")
+
+        finally:
+            cursor.close()
+            conexion.close()
