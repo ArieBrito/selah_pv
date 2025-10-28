@@ -50,32 +50,40 @@ def conectar_db():
 
 # --- OBTENER CLIENTES ---
 @st.cache_data
-def obtener_clientes():
-    conexion = conectar_db()
-    if not conexion:
-        return []
-    cursor = conexion.cursor()
-    cursor.execute("SELECT ID_CLIENTE, NOMBRE_CLIENTE, APELLIDO_CLIENTE FROM CLIENTES")
-    result = cursor.fetchall()
-    cursor.close()
-    conexion.close()
-    return [(r[0], f"{r[1]} {r[2]}") for r in result]
+ef obtener_clientes():
+    try:
+        conexion = conectar_db()
+        if not conexion:
+            return []
+        cursor = conexion.cursor()
+        cursor.execute("SELECT ID_CLIENTE, NOMBRE_CLIENTE, APELLIDO_CLIENTE FROM CLIENTES")
+        result = cursor.fetchall()
+        cursor.close()
+        conexion.close()
+        return [(r[0], f"{r[1]} {r[2]}") for r in result]
 
+    except Error as e:
+        st.error(f"⚠️ Error al obtener clientes: {e}")
+        return []
 
 # --- OBTENER PRODUCTOS ---
 @st.cache_data
 def obtener_pulseras():
-    conexion = conectar_db()
-    if not conexion:
-        return [('0000', 'Otro/Manual', 'M', Decimal('0.00'))]
-    cursor = conexion.cursor()
-    cursor.execute("SELECT ID_PRODUCTO, DESCRIPCION, CLASIFICACION, PRECIO_CLASIFICADO FROM PULSERAS")
-    productos_db = cursor.fetchall()
-    cursor.close()
-    conexion.close()
-    productos_db.append(('0000', 'Otro/Manual', 'M', Decimal('0.00')))
-    return productos_db
+    try:
+        conexion = conectar_db()
+        if not conexion:
+            return [('0000', 'Otro/Manual', 'M', Decimal('0.00'))]
+        cursor = conexion.cursor()
+        cursor.execute("SELECT ID_PRODUCTO, DESCRIPCION, CLASIFICACION, PRECIO_CLASIFICADO FROM PULSERAS")
+        productos_db = cursor.fetchall()
+        cursor.close()
+        conexion.close()
+        productos_db.append(('0000', 'Otro/Manual', 'M', Decimal('0.00')))
+        return productos_db
 
+    except Error as e:
+        st.error(f"⚠️ Error al obtener pulseras: {e}")
+        return [('0000', 'Otro/Manual', 'M', Decimal('0.00'))]
 
 # --- GENERAR TICKET PDF ---
 def generar_ticket(id_venta, cliente_nombre, productos, subtotal, descuento, total, pago, cambio, tipo_pago):
@@ -225,4 +233,5 @@ if st.button("🧾 Generar Ticket PDF"):
     st.success(f"Ticket generado: {pdf_path}")
     with open(pdf_path, "rb") as f:
         st.download_button("Descargar Ticket PDF", f, file_name=f"ticket_{id_venta}.pdf", mime="application/pdf")
+
 
