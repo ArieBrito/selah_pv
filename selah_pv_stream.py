@@ -274,28 +274,28 @@ if st.button("🧾 Registrar y Generar Ticket"):
 
             # --- Obtener ID_VENTA generado ---
             id_venta = cursor.lastrowid
-
             # --- Insertar productos de la venta ---
             sql_prod = """
-                INSERT INTO VENTA_PRODUCTOS
-                (ID_VENTA, ID_PRODUCTO, DESCRIPCION, CLASIFICACION, CANTIDAD, PRECIO_UNITARIO, PRECIO_TOTAL)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO VENTA_PRODUCTOS
+            (ID_VENTA, ID_PRODUCTO, DESCRIPCION, CLASIFICACION, CANTIDAD, PRECIO_UNITARIO, PRECIO_TOTAL)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
             for p in lista_venta:
-                clasificacion = next((x[2] for x in productos if x[0] == p["id_producto"]), "M")
-                datos_prod = (
-                    id_venta,
-                    p["id_producto"],
-                    p["desc"],
-                    clasificacion,
-                    int(p["cant"]),
-                    float(p["precio"]),
-                    float(p["subtotal"])
-                )
-                cursor.execute(sql_prod, datos_prod)
-
-            conexion.commit()
-
+                # Si es producto manual, ID_PRODUCTO = None para no romper la FK
+                prod_id = p["id_producto"] if p["id_producto"] != '0000' else None
+                # Obtener clasificación si el producto existe en PULSERAS
+    clasificacion = next((x[2] for x in productos if x[0] == p["id_producto"]), "M")
+    datos_prod = (
+        id_venta,
+        prod_id,
+        p["desc"],
+        clasificacion,
+        int(p["cant"]),
+        float(p["precio"]),
+        float(p["subtotal"])
+    )
+    cursor.execute(sql_prod, datos_prod)
+    conexion.commit()
             # --- Generar ticket PDF ---
             cliente_nombre = cliente_otro if cliente_otro else cliente_sel
             pdf_path = generar_ticket(
@@ -327,6 +327,7 @@ if st.button("🧾 Registrar y Generar Ticket"):
         finally:
             cursor.close()
             conexion.close()
+
 
 
 
