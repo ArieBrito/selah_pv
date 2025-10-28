@@ -254,14 +254,12 @@ if st.button("🧾 Registrar y Generar Ticket"):
     if not conexion:
         st.error("❌ No se pudo conectar a la base de datos.")
     else:
+        cursor = None
         try:
             cursor = conexion.cursor()
 
             # --- Obtener ID del cliente ---
-            if cliente_otro:
-                id_cliente = None  # Cliente no registrado
-            else:
-                id_cliente = int(cliente_sel.split(" - ")[0])
+            id_cliente = None if cliente_otro else int(cliente_sel.split(" - ")[0])
 
             # --- Insertar venta ---
             sql_venta = """
@@ -271,36 +269,34 @@ if st.button("🧾 Registrar y Generar Ticket"):
             datos_venta = (id_cliente, tipo_venta, float(total_final), float(descuento), tipo_pago, float(pago))
             cursor.execute(sql_venta, datos_venta)
             conexion.commit()
-
-            # --- Obtener ID_VENTA generado ---
             id_venta = cursor.lastrowid
-            # --- Insertar productos de la venta ---
+
+            # --- Insertar productos ---
             sql_prod = """
-            INSERT INTO VENTA_PRODUCTOS
-            (ID_VENTA, ID_PRODUCTO, DESCRIPCION, CLASIFICACION, CANTIDAD, PRECIO_UNITARIO, PRECIO_TOTAL)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO VENTA_PRODUCTOS
+                (ID_VENTA, ID_PRODUCTO, DESCRIPCION, CLASIFICACION, CANTIDAD, PRECIO_UNITARIO, PRECIO_TOTAL)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
             for p in lista_venta:
-                # Si es producto manual, ID_PRODUCTO = None para no romper la FK
                 prod_id = p["id_producto"] if p["id_producto"] != '0000' else None
-                # Obtener clasificación si el producto existe en PULSERAS
-    clasificacion = next((x[2] for x in productos if x[0] == p["id_producto"]), "M")
-    datos_prod = (
-        id_venta,
-        prod_id,
-        p["desc"],
-        clasificacion,
-        int(p["cant"]),
-        float(p["precio"]),
-        float(p["subtotal"])
-    )
-    cursor.execute(sql_prod, datos_prod)
-    conexion.commit()
-            # --- Generar ticket PDF ---
-            cliente_nombre = cliente_otro if cliente_otro else cliente_sel
+                clasificacion = next((x[2] for x in productos if x[0] == p["id_producto"]), "M")
+                datos_prod = (
+                    id_venta,
+                    prod_id,
+                    p["desc"],
+                    clasificacion,
+                    int(p["cant"]),
+                    float(p["precio"]),
+                    float(p["subtotal"])
+                )
+                cursor.execute(sql_prod, datos_prod)
+            conexion.commit()
+
+            # --- Generar ticket ---
+            cliente_nombre_final = cliente_otro if cliente_otro else cliente_sel
             pdf_path = generar_ticket(
                 id_venta,
-                cliente_nombre,
+                cliente_nombre_final,
                 lista_venta,
                 total,
                 descuento,
@@ -311,22 +307,20 @@ if st.button("🧾 Registrar y Generar Ticket"):
             )
 
             st.success(f"✅ Venta registrada correctamente. Ticket generado: {pdf_path}")
-
             with open(pdf_path, "rb") as f:
-                st.download_button(
-                    "Descargar Ticket PDF",
-                    f,
-                    file_name=f"ticket_{id_venta}.pdf",
-                    mime="application/pdf"
-                )
+                st.download_button("Descargar Ticket PDF", f,
+                                   file_name=f"ticket_{id_venta}.pdf",
+                                   mime="application/pdf")
 
         except Error as e:
             conexion.rollback()
             st.error(f"⚠️ Error al registrar la venta: {e}")
 
         finally:
-            cursor.close()
+            if cursor:
+                cursor.close()
             conexion.close()
+
 
 
 
