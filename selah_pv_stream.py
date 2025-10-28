@@ -87,84 +87,86 @@ def generar_ticket(id_venta, cliente_nombre, productos, subtotal, descuento, tot
     carpeta_tickets = "tickets"
     os.makedirs(carpeta_tickets, exist_ok=True)
     archivo_pdf = os.path.join(carpeta_tickets, f"ticket_{id_venta}.pdf")
+
     c = canvas.Canvas(archivo_pdf, pagesize=letter)
     width, height = letter
-    x_start, y = 50, height - 100
+    x_start = 50
+    y = height - 100
 
-# --- Logo centrado ---
-logo_width = 100
-if os.path.exists(LOGO_PATH):
-    x_logo = (width - logo_width) / 2
-    c.drawImage(LOGO_PATH, x=x_logo, y=height-120, width=logo_width, preserveAspectRatio=True, mask='auto')
+    # --- Logo centrado ---
+    logo_width = 100
+    if os.path.exists(LOGO_PATH):
+        x_logo = (width - logo_width) / 2
+        c.drawImage(LOGO_PATH, x=x_logo, y=height-120, width=logo_width, preserveAspectRatio=True, mask='auto')
 
-# --- Título ---
-c.setFont("Helvetica-Bold", 16)
-y_title = height - 140  # ajusta según altura del logo
-c.drawCentredString(width / 2, y_title, "SELAH - TICKET DE VENTA")
-y = y_title - 30
+    # --- Título ---
+    c.setFont("Helvetica-Bold", 16)
+    y_title = height - 140  # ajusta según altura del logo
+    c.drawCentredString(width / 2, y_title, "SELAH - TICKET DE VENTA")
+    y = y_title - 30
 
-# --- Detalles del ticket ---
-c.setFont("Helvetica", 10)
-c.drawString(x_start, y, f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-y -= 15
-c.drawString(x_start, y, f"Cliente: {cliente_nombre}")
-y -= 25
+    # --- Detalles del ticket ---
+    c.setFont("Helvetica", 10)
+    c.drawString(x_start, y, f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    y -= 15
+    c.drawString(x_start, y, f"Cliente: {cliente_nombre}")
+    y -= 25
 
-# --- Encabezados de productos ---
-c.setFont("Helvetica-Bold", 10)
-c.drawString(x_start, y, "Producto")
-c.drawString(250, y, "Cant.")
-c.drawString(350, y, "Precio")
-c.drawString(450, y, "Subtotal")
-y -= 10
-c.line(x_start, y, 550, y)
-y -= 15
-
-# --- Productos ---
-c.setFont("Helvetica", 10)
-for p in productos:
-    c.drawString(x_start, y, p["desc"][:25])
-    c.drawString(250, y, str(p["cant"]))
-    c.drawRightString(400, y, f"${p['precio']:.2f}")
-    c.drawRightString(550, y, f"${p['subtotal']:.2f}")
+    # --- Encabezados de productos ---
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(x_start, y, "Producto")
+    c.drawString(250, y, "Cant.")
+    c.drawString(350, y, "Precio")
+    c.drawString(450, y, "Subtotal")
+    y -= 10
+    c.line(x_start, y, 550, y)
     y -= 15
 
-y -= 10
-c.line(x_start, y, 550, y)
-y -= 20
+    # --- Productos ---
+    c.setFont("Helvetica", 10)
+    for p in productos:
+        c.drawString(x_start, y, p["desc"][:25])
+        c.drawString(250, y, str(p["cant"]))
+        c.drawRightString(400, y, f"${p['precio']:.2f}")
+        c.drawRightString(550, y, f"${p['subtotal']:.2f}")
+        y -= 15
 
-# --- Totales ---
-c.drawRightString(470, y, "SUBTOTAL:")
-c.drawRightString(550, y, f"${subtotal:.2f}")
-y -= 15
-if descuento > 0:
-    c.drawRightString(470, y, f"DESCUENTO ({descuento:.1f}%):")
-    c.drawRightString(550, y, f"-${subtotal*(descuento/100):.2f}")
+    y -= 10
+    c.line(x_start, y, 550, y)
+    y -= 20
+
+    # --- Totales ---
+    c.drawRightString(470, y, "SUBTOTAL:")
+    c.drawRightString(550, y, f"${subtotal:.2f}")
+    y -= 15
+    if descuento > 0:
+        c.drawRightString(470, y, f"DESCUENTO ({descuento:.1f}%):")
+        c.drawRightString(550, y, f"-${subtotal*(descuento/100):.2f}")
+        y -= 15
+
+    c.setFont("Helvetica-Bold", 12)
+    c.drawRightString(470, y, "TOTAL:")
+    c.drawRightString(550, y, f"${total:.2f}")
+    y -= 20
+
+    c.setFont("Helvetica", 10)
+    c.drawRightString(550, y, f"RECIBIDO: ${pago:.2f}")
     y -= 15
 
-c.setFont("Helvetica-Bold", 12)
-c.drawRightString(470, y, "TOTAL:")
-c.drawRightString(550, y, f"${total:.2f}")
-y -= 20
+    c.setFont("Helvetica-Bold", 12)
+    c.drawRightString(550, y, f"CAMBIO: ${cambio:.2f}")
+    y -= 25
 
-c.setFont("Helvetica", 10)
-c.drawRightString(550, y, f"RECIBIDO: ${pago:.2f}")
-y -= 15
+    c.setFont("Helvetica", 10)
+    c.drawString(x_start, y, f"Tipo de pago: {tipo_pago}")
+    y -= 40
 
-c.setFont("Helvetica-Bold", 12)
-c.drawRightString(550, y, f"CAMBIO: ${cambio:.2f}")
-y -= 25
+    c.setFont("Helvetica-Oblique", 9)
+    c.drawCentredString(width / 2, y, "¡Gracias por su compra!")
 
-c.setFont("Helvetica", 10)
-c.drawString(x_start, y, f"Tipo de pago: {tipo_pago}")
-y -= 40
-
-c.setFont("Helvetica-Oblique", 9)
-c.drawCentredString(width / 2, y, "¡Gracias por su compra!")
-
-c.save()
-return archivo_pdf
-
+    c.save()
+    return archivo_pdf
+    
 # --- INTERFAZ PRINCIPAL ---
 st.title("Selah TPV")
 st.markdown("---")
@@ -325,6 +327,7 @@ if st.button("🧾 Registrar y Generar Ticket"):
         finally:
             cursor.close()
             conexion.close()
+
 
 
 
