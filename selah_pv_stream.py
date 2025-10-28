@@ -22,7 +22,6 @@ ACCENT_COLOR = '#F6A441'
 LOGO_PATH = "./www/logo.png"
 
 # --- FUNCIÓN DE CONEXIÓN MYSQL ---
-@st.cache_resource
 def conectar_db():
     try:
         conexion = mysql.connector.connect(
@@ -49,7 +48,6 @@ def conectar_db():
 
 
 # --- OBTENER CLIENTES ---
-@st.cache_data
 def obtener_clientes():
     try:
         conexion = conectar_db()
@@ -67,7 +65,6 @@ def obtener_clientes():
         return []
 
 # --- OBTENER PRODUCTOS ---
-@st.cache_data
 def obtener_pulseras():
     try:
         conexion = conectar_db()
@@ -233,6 +230,7 @@ if st.button("🧾 Generar Ticket PDF"):
     st.success(f"Ticket generado: {pdf_path}")
     with open(pdf_path, "rb") as f:
         st.download_button("Descargar Ticket PDF", f, file_name=f"ticket_{id_venta}.pdf", mime="application/pdf")
+
 
 
 
