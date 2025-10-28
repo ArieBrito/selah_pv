@@ -50,7 +50,7 @@ def conectar_db():
 
 # --- OBTENER CLIENTES ---
 @st.cache_data
-ef obtener_clientes():
+def obtener_clientes():
     try:
         conexion = conectar_db()
         if not conexion:
@@ -233,5 +233,6 @@ if st.button("🧾 Generar Ticket PDF"):
     st.success(f"Ticket generado: {pdf_path}")
     with open(pdf_path, "rb") as f:
         st.download_button("Descargar Ticket PDF", f, file_name=f"ticket_{id_venta}.pdf", mime="application/pdf")
+
 
 
