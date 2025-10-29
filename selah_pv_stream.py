@@ -241,10 +241,11 @@ tipo_venta = colp2.selectbox("Tipo de venta", ["Contado", "A cuenta", "A vistas"
 tipo_pago = colp3.selectbox("Tipo de pago", ["Efectivo", "Tarjeta", "Transferencia"])
 pago = Decimal(str(colp4.number_input("Pago recibido", min_value=0.0, value=float(total), step=1.0)))
 
-subtotal = total
+subtotal1 = total
 total_final = total * (Decimal(1) - descuento / Decimal(100))
 cambio = pago - total_final if tipo_pago == "Efectivo" else Decimal("0.00")
 
+st.metric("Subtotal", f"${subtotal1:.2f"}")
 st.metric("💰 Total a pagar", f"${total_final:.2f}")
 st.metric("🔁 Cambio", f"${cambio:.2f}")
 
@@ -321,6 +322,7 @@ if st.button("🧾 Registrar y Generar Ticket"):
             if cursor:
                 cursor.close()
             conexion.close()
+
 
 
 
