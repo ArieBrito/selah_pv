@@ -236,6 +236,7 @@ with col2:
 # --- PAGO ---
 st.subheader("💳 Detalles de Pago")
 colp1, colp2, colp3, colp4 = st.columns(4)
+
 descuento = Decimal(str(colp1.number_input("Descuento (%)", min_value=0.0, max_value=30.0, step=0.5)))
 tipo_venta = colp2.selectbox("Tipo de venta", ["Contado", "A cuenta", "A vistas"])
 tipo_pago = colp3.selectbox("Tipo de pago", ["Efectivo", "Tarjeta", "Transferencia"])
@@ -245,9 +246,10 @@ subtotal1 = total
 total_final = total * (Decimal(1) - descuento / Decimal(100))
 cambio = pago - total_final if tipo_pago == "Efectivo" else Decimal("0.00")
 
-st.metric("Subtotal", f"${subtotal1:.2f"}")
+st.metric("Subtotal", f"${subtotal1:.2f}")
 st.metric("💰 Total a pagar", f"${total_final:.2f}")
 st.metric("🔁 Cambio", f"${cambio:.2f}")
+
 
 # --- GENERAR VENTA ---
 # --- REGISTRAR VENTA Y GENERAR TICKET ---
@@ -322,6 +324,7 @@ if st.button("🧾 Registrar y Generar Ticket"):
             if cursor:
                 cursor.close()
             conexion.close()
+
 
 
 
